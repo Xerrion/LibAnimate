@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/Xerrion/LibAnimate-1.0/compare/2.0.0...2.0.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* use BigWigsMods/packager@v2 (v3 does not exist) ([#5](https://github.com/Xerrion/LibAnimate-1.0/issues/5)) ([53db571](https://github.com/Xerrion/LibAnimate-1.0/commit/53db5717dfa69b5c046c1b40ad2541024acbf166))
+
 ## [2.0.0](https://github.com/Xerrion/LibAnimate-1.0/compare/1.0.0...2.0.0) (2026-02-22)
 
 
