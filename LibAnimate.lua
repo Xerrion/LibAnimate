@@ -35,7 +35,8 @@ if not lib then return end
 ---@field alpha number? Opacity (default 1.0)
 ---@field easing EasingSpec? Easing for the segment STARTING at this keyframe
 
----@alias EasingSpec string|number[] A named preset (e.g. "easeOutCubic") or cubic-bezier control points {p1x, p1y, p2x, p2y}
+--- A named preset (e.g. "easeOutCubic") or cubic-bezier control points {p1x, p1y, p2x, p2y}.
+---@alias EasingSpec string|number[]
 
 ---@class AnimateOpts
 ---@field duration number? Override animation duration in seconds
