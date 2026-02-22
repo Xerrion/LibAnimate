@@ -1,3 +1,10 @@
+## [3.0.1] - 2026-02-22
+
+### ⚙️ Miscellaneous Tasks
+
+- Fix-changelog-generation
+- Add ignored files
+- Add ignored files (#17)
 ## [3.0.0] - 2026-02-22
 
 ### ⚙️ Miscellaneous Tasks
@@ -5,6 +12,7 @@
 - Migrate from release-please to git-cliff (#13)
 - [**breaking**] Rebrand from LibAnimate-1.0 to LibAnimate (#14)
 - Fix-changelog-generation (#16)
+- Release 3.0.0 (#15)
 ## [2.1.0] - 2026-02-22
 
 ### 🚀 Features
