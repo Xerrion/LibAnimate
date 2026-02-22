@@ -57,7 +57,7 @@ jobs:
     if: >-
       always() &&
       github.event_name != 'pull_request' &&
-      (github.ref_type == 'tag' || github.event_name == 'workflow_dispatch')
+      (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.vars.outputs.tag }}
@@ -72,10 +72,16 @@ jobs:
         shell: bash
         run: |
           TAG=""
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            TAG="${{ github.ref_name }}"
+          if [ -n "${{ needs.create-tag.outputs.tag }}" ]; then
+            TAG="${{ needs.create-tag.outputs.tag }}"
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             TAG="${{ github.event.inputs.tag_name }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+          if [ -z "$TAG" ]; then
+            echo "::error::No tag could be resolved"
+            exit 1
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
@@ -95,12 +101,10 @@ jobs:
           git switch "$BRANCH"
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-
           git add CHANGELOG.md
           if git diff --cached --quiet; then
             exit 0
           fi
-
           git commit -m "Update changelog"
           git push origin "HEAD:$BRANCH"
 
@@ -110,7 +114,7 @@ jobs:
     if: >-
       always() && (
         needs.create-tag.result == 'success' ||
-        github.ref_type == 'tag' ||
+        startsWith(github.ref, 'refs/tags/') ||
         github.event_name == 'workflow_dispatch'
       )
     runs-on: ubuntu-latest
@@ -126,10 +130,10 @@ jobs:
           TAG=""
           if [ -n "${{ needs.create-tag.outputs.tag }}" ]; then
             TAG="${{ needs.create-tag.outputs.tag }}"
-          elif [ "${{ github.ref_type }}" = "tag" ]; then
-            TAG="${{ github.ref_name }}"
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             TAG="${{ github.event.inputs.tag_name }}"
+          else
+            TAG="${{ github.ref_name }}"
           fi
           if [ -z "$TAG" ]; then
             echo "::error::No tag could be resolved"
