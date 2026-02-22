@@ -171,18 +171,31 @@ lib.easings = {
 ---@param p2y number Y of second control point
 ---@return fun(t: number): number easingFn Easing function mapping [0,1] to [0,1]
 local function CubicBezier(p1x, p1y, p2x, p2y)
+    --- Evaluates the X component of the cubic bezier at parameter t.
+    ---@param t number Bezier parameter (0-1)
+    ---@return number x X coordinate on the bezier curve
     local function sampleCurveX(t)
         return (((1 - 3 * p2x + 3 * p1x) * t + (3 * p2x - 6 * p1x)) * t + 3 * p1x) * t
     end
 
+    --- Evaluates the Y component (output value) of the cubic bezier at parameter t.
+    ---@param t number Bezier parameter (0-1)
+    ---@return number y Y coordinate on the bezier curve
     local function sampleCurveY(t)
         return (((1 - 3 * p2y + 3 * p1y) * t + (3 * p2y - 6 * p1y)) * t + 3 * p1y) * t
     end
 
+    --- Evaluates the derivative of the X component at parameter t (for Newton-Raphson).
+    ---@param t number Bezier parameter (0-1)
+    ---@return number dx Derivative of X with respect to t
     local function sampleCurveDerivativeX(t)
         return (3 * (1 - 3 * p2x + 3 * p1x) * t + 2 * (3 * p2x - 6 * p1x)) * t + 3 * p1x
     end
 
+    --- Finds the bezier parameter t that produces a given X value.
+    --- Uses Newton-Raphson iteration (8 steps) with binary-search fallback (20 steps).
+    ---@param x number Target X value (0-1)
+    ---@return number t Bezier parameter that maps to x
     local function solveCurveX(x)
         -- Newton-Raphson
         local t = x
@@ -216,6 +229,9 @@ local function CubicBezier(p1x, p1y, p2x, p2y)
         return t
     end
 
+    --- Returned easing function: maps a normalized progress value through the bezier curve.
+    ---@param x number Normalized progress (0-1), clamped at boundaries
+    ---@return number y Eased progress value
     return function(x)
         if x <= 0 then return 0 end
         if x >= 1 then return 1 end
@@ -253,6 +269,9 @@ lib.ApplyEasing = ApplyEasing
 -- Keyframe Interpolation
 -------------------------------------------------------------------------------
 
+--- Default values for keyframe properties when not explicitly set.
+--- Used by `GetProperty` to fill in missing values during interpolation.
+---@type table<string, number>
 local PROPERTY_DEFAULTS = {
     translateX = 0,
     translateY = 0,
@@ -260,6 +279,15 @@ local PROPERTY_DEFAULTS = {
     alpha = 1.0,
 }
 
+--- Finds the two bracketing keyframes for a given progress value.
+--- Returns the start and end keyframes of the active segment, the interpolation
+--- progress within that segment, and the index of the start keyframe.
+---@param keyframes Keyframe[] Ordered keyframe list (progress 0.0 to 1.0)
+---@param progress number Normalized animation progress (0-1)
+---@return Keyframe kf1 Start keyframe of the active segment
+---@return Keyframe kf2 End keyframe of the active segment
+---@return number segmentProgress Interpolation progress within the segment (0-1)
+---@return integer kf1Index Index of kf1 in the keyframes array
 local function FindKeyframes(keyframes, progress)
     -- Handle boundary cases explicitly
     if progress <= 0 then
@@ -292,6 +320,10 @@ local function FindKeyframes(keyframes, progress)
     return keyframes[n - 1], keyframes[n], 1, n - 1
 end
 
+--- Returns a keyframe property value, falling back to PROPERTY_DEFAULTS if not set.
+---@param kf Keyframe The keyframe to read from
+---@param name string Property name ("translateX", "translateY", "scale", or "alpha")
+---@return number value The property value
 local function GetProperty(kf, name)
     if kf[name] ~= nil then
         return kf[name]
@@ -299,6 +331,11 @@ local function GetProperty(kf, name)
     return PROPERTY_DEFAULTS[name]
 end
 
+--- Linearly interpolates between two values.
+---@param a number Start value
+---@param b number End value
+---@param t number Interpolation factor (0 = a, 1 = b)
+---@return number result Interpolated value
 local function Lerp(a, b, t)
     return a + (b - a) * t
 end
@@ -307,6 +344,16 @@ end
 -- ApplyToFrame
 -------------------------------------------------------------------------------
 
+--- Applies interpolated animation properties to a frame.
+--- Computes the final anchor offset from translation fractions and distance,
+--- repositions the frame, and sets scale and alpha. Scale is clamped to a
+--- minimum of 0.001 to prevent WoW `SetScale(0)` errors.
+---@param frame Frame The frame being animated
+---@param state AnimationState The active animation state
+---@param tx number Interpolated translateX (fraction of distance)
+---@param ty number Interpolated translateY (fraction of distance)
+---@param sc number Interpolated scale factor
+---@param al number Interpolated alpha (opacity)
 local function ApplyToFrame(frame, state, tx, ty, sc, al)
     local distance = state.distance or 0
 
@@ -327,6 +374,11 @@ end
 -- Driver Frame OnUpdate
 -------------------------------------------------------------------------------
 
+--- Main animation driver. Runs every frame while any animation is active.
+--- For each active animation: advances progress, finds bracketing keyframes,
+--- applies per-segment easing, interpolates properties, and applies to the frame.
+--- Completed animations are snapped to final state and their callbacks are fired
+--- in a deferred pass (after all state cleanup) to prevent re-entrancy issues.
 driverFrame:SetScript("OnUpdate", function()
     local now = GetTime()
     local toRemove = nil
