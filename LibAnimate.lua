@@ -92,6 +92,7 @@ local math_min = math.min
 local math_abs = math.abs
 local math_floor = math.floor
 local table_sort = table.sort
+local table_remove = table.remove
 
 -------------------------------------------------------------------------------
 -- State Initialization
@@ -406,60 +407,90 @@ driverFrame:SetScript("OnUpdate", function()
     local toRemove = nil
 
     for frame, state in pairs(lib.activeAnimations) do
-        local elapsed = now - state.startTime
-
-        -- Handle delay: skip interpolation while in delay period
-        if elapsed < state.delay then -- luacheck: ignore 542
-            -- Do nothing, frame stays in its pre-animation state
+        -- Skip paused animations entirely
+        if state.isPaused then -- luacheck: ignore 542
+            -- Do nothing: animation is frozen
         else
-            local rawProgress = math_min(
-                (elapsed - state.delay) / state.duration, 1.0
-            )
+            local elapsed = now - state.startTime
 
-            -- Find bracketing keyframes
-            local kf1, kf2, segmentProgress, kf1Index =
-                FindKeyframes(state.keyframes, rawProgress)
+            -- Handle delay: skip interpolation while in delay period
+            if elapsed < state.delay then -- luacheck: ignore 542
+                -- Do nothing, frame stays in its pre-animation state
+            else
+                local rawProgress = math_min(
+                    (elapsed - state.delay) / state.duration, 1.0
+                )
 
-            -- Apply per-segment easing (pre-resolved at animation start)
-            if state.resolvedEasings[kf1Index] then
-                segmentProgress =
-                    state.resolvedEasings[kf1Index](segmentProgress)
-            end
+                -- Find bracketing keyframes
+                local kf1, kf2, segmentProgress, kf1Index =
+                    FindKeyframes(state.keyframes, rawProgress)
 
-            -- Interpolate properties (unrolled for performance)
-            local easedT = segmentProgress
-            local tx = Lerp(
-                GetProperty(kf1, "translateX"),
-                GetProperty(kf2, "translateX"), easedT
-            )
-            local ty = Lerp(
-                GetProperty(kf1, "translateY"),
-                GetProperty(kf2, "translateY"), easedT
-            )
-            local sc = Lerp(
-                GetProperty(kf1, "scale"),
-                GetProperty(kf2, "scale"), easedT
-            )
-            local al = Lerp(
-                GetProperty(kf1, "alpha"),
-                GetProperty(kf2, "alpha"), easedT
-            )
+                -- Apply per-segment easing
+                if state.resolvedEasings[kf1Index] then
+                    segmentProgress =
+                        state.resolvedEasings[kf1Index](segmentProgress)
+                end
 
-            -- Apply to frame
-            ApplyToFrame(frame, state, tx, ty, sc, al)
+                -- Interpolate properties
+                local easedT = segmentProgress
+                local tx = Lerp(
+                    GetProperty(kf1, "translateX"),
+                    GetProperty(kf2, "translateX"), easedT
+                )
+                local ty = Lerp(
+                    GetProperty(kf1, "translateY"),
+                    GetProperty(kf2, "translateY"), easedT
+                )
+                local sc = Lerp(
+                    GetProperty(kf1, "scale"),
+                    GetProperty(kf2, "scale"), easedT
+                )
+                local al = Lerp(
+                    GetProperty(kf1, "alpha"),
+                    GetProperty(kf2, "alpha"), easedT
+                )
 
-            -- Check completion with repeat support
-            if rawProgress >= 1.0 then
-                if state.repeatCount == 0
-                    or state.currentRepeat < state.repeatCount
-                then
-                    -- Reset for next repeat (no delay between repeats)
-                    state.startTime = now
-                    state.delay = 0
-                    state.currentRepeat = state.currentRepeat + 1
-                else
-                    if not toRemove then toRemove = {} end
-                    toRemove[#toRemove + 1] = frame
+                -- SlideAnchor interpolation: smoothly move base anchor
+                if state.slideStartTime then
+                    local slideElapsed = now - state.slideStartTime
+                    local slideProgress = math_min(
+                        slideElapsed / state.slideDuration, 1.0
+                    )
+                    state.anchorX = Lerp(
+                        state.slideFromX, state.slideToX, slideProgress
+                    )
+                    state.anchorY = Lerp(
+                        state.slideFromY, state.slideToY, slideProgress
+                    )
+                    -- Clear slide state when complete
+                    if slideProgress >= 1.0 then
+                        state.anchorX = state.slideToX
+                        state.anchorY = state.slideToY
+                        state.slideStartTime = nil
+                        state.slideDuration = nil
+                        state.slideFromX = nil
+                        state.slideFromY = nil
+                        state.slideToX = nil
+                        state.slideToY = nil
+                    end
+                end
+
+                -- Apply to frame
+                ApplyToFrame(frame, state, tx, ty, sc, al)
+
+                -- Check completion with repeat support
+                if rawProgress >= 1.0 then
+                    if state.repeatCount == 0
+                        or state.currentRepeat < state.repeatCount
+                    then
+                        -- Reset for next repeat (no delay between repeats)
+                        state.startTime = now
+                        state.delay = 0
+                        state.currentRepeat = state.currentRepeat + 1
+                    else
+                        if not toRemove then toRemove = {} end
+                        toRemove[#toRemove + 1] = frame
+                    end
                 end
             end
         end
@@ -475,7 +506,9 @@ driverFrame:SetScript("OnUpdate", function()
                 local onFinished = state.onFinished
                 if onFinished then
                     if not callbacks then callbacks = {} end
-                    callbacks[#callbacks + 1] = { fn = onFinished, frame = frame }
+                    callbacks[#callbacks + 1] = {
+                        fn = onFinished, frame = frame,
+                    }
                 end
 
                 -- Snap to final state
@@ -680,6 +713,7 @@ end
 --- Internal helper to start the next entry in an animation queue.
 --- Retrieves the current queue entry, builds options, and calls Animate
 --- with an internal onFinished that advances the queue.
+--- Exposed as lib._startQueueEntry for internal use by SkipToEntry/RemoveQueueEntry.
 ---@param self LibAnimate
 ---@param frame Frame The frame being animated
 local function StartQueueEntry(self, frame)
@@ -722,6 +756,8 @@ local function StartQueueEntry(self, frame)
     self:Animate(frame, entry.name, opts)
     self.animationQueues[frame] = savedQueue
 end
+
+lib._startQueueEntry = StartQueueEntry
 
 --- Queues a sequence of animations to play one after another on a frame.
 --- Each entry can have its own duration, distance, delay, repeatCount,
@@ -783,6 +819,178 @@ end
 ---@return boolean isQueued True if the frame has a pending queue
 function lib:IsQueued(frame)
     return lib.animationQueues[frame] ~= nil
+end
+
+-------------------------------------------------------------------------------
+-- Pause / Resume / IsPaused
+-------------------------------------------------------------------------------
+
+--- Freezes the current animation mid-progress.
+--- The OnUpdate loop skips paused frames entirely. Does nothing if the
+--- frame has no active animation or is already paused.
+---@param frame Frame The frame to pause
+function lib:PauseQueue(frame)
+    local state = lib.activeAnimations[frame]
+    if not state or state.isPaused then return end
+
+    local now = GetTime()
+    state.elapsedAtPause = now - state.startTime
+    state.isPaused = true
+
+    -- Also freeze any active slide
+    if state.slideStartTime then
+        state.slideElapsedAtPause = now - state.slideStartTime
+    end
+end
+
+--- Resumes a paused animation from exactly where it left off.
+--- Does nothing if the frame is not paused.
+---@param frame Frame The frame to resume
+function lib:ResumeQueue(frame)
+    local state = lib.activeAnimations[frame]
+    if not state or not state.isPaused then return end
+
+    local now = GetTime()
+    state.startTime = now - state.elapsedAtPause
+    state.isPaused = nil
+    state.elapsedAtPause = nil
+
+    -- Also resume any active slide
+    if state.slideStartTime and state.slideElapsedAtPause then
+        state.slideStartTime = now - state.slideElapsedAtPause
+        state.slideElapsedAtPause = nil
+    end
+end
+
+--- Returns whether a frame has an active animation that is paused.
+---@param frame Frame The frame to check
+---@return boolean isPaused True if the frame's animation is paused
+function lib:IsPaused(frame)
+    local state = lib.activeAnimations[frame]
+    return state ~= nil and state.isPaused == true
+end
+
+-------------------------------------------------------------------------------
+-- SlideAnchor
+-------------------------------------------------------------------------------
+
+--- Smoothly interpolates the internal anchor position over the given
+--- duration without interrupting the current animation or queue. The
+--- running animation continues calculating offsets relative to the
+--- smoothly-moving base position.
+---
+--- If the frame has no active animation, performs a direct `UpdateAnchor`
+--- call instead. If a slide is already in progress, snaps the current
+--- slide to completion before starting the new one.
+---
+--- The slide respects pause state: while paused, slide progress does not
+--- advance. On resume, the slide picks up where it left off.
+---@param frame Frame The frame whose anchor to slide
+---@param newX number Target anchor X offset
+---@param newY number Target anchor Y offset
+---@param duration number Duration of the slide in seconds
+function lib:SlideAnchor(frame, newX, newY, duration)
+    local state = lib.activeAnimations[frame]
+    if not state then
+        -- No active animation — direct update
+        self:UpdateAnchor(frame, newX, newY)
+        return
+    end
+
+    -- If already sliding, snap current slide to completion first
+    if state.slideStartTime then
+        state.anchorX = state.slideToX
+        state.anchorY = state.slideToY
+        state.slideStartTime = nil
+        state.slideDuration = nil
+        state.slideFromX = nil
+        state.slideFromY = nil
+        state.slideToX = nil
+        state.slideToY = nil
+        state.slideElapsedAtPause = nil
+    end
+
+    -- Start new slide from current anchor position
+    state.slideFromX = state.anchorX
+    state.slideFromY = state.anchorY
+    state.slideToX = newX
+    state.slideToY = newY
+    state.slideDuration = duration
+    state.slideStartTime = GetTime()
+
+    -- If currently paused, record slide elapsed at pause as 0
+    if state.isPaused then
+        state.slideElapsedAtPause = 0
+    end
+end
+
+-------------------------------------------------------------------------------
+-- SkipToEntry
+-------------------------------------------------------------------------------
+
+--- Jumps directly to a specific queue entry, skipping all intermediate
+--- steps. No callbacks fire for skipped entries. The current animation
+--- is stopped and the target entry begins immediately.
+---@param frame Frame The frame with an active queue
+---@param index number The 1-based index of the queue entry to jump to
+function lib:SkipToEntry(frame, index)
+    local queue = lib.animationQueues[frame]
+    if not queue then return end
+
+    if type(index) ~= "number"
+        or index < 1
+        or index > #queue.entries
+        or index ~= math_floor(index)
+    then
+        return
+    end
+
+    -- Remove current animation without full restore (don't call Stop)
+    lib.activeAnimations[frame] = nil
+
+    -- Set queue to target index and start it
+    queue.index = index
+    StartQueueEntry(self, frame)
+end
+
+-------------------------------------------------------------------------------
+-- RemoveQueueEntry
+-------------------------------------------------------------------------------
+
+--- Removes a specific entry from the pending queue by index.
+--- Behaviour depends on the entry's position relative to the current step:
+--- - Before current: entry is removed and `queue.index` is decremented
+--- - At current: entry is removed, current animation stops, next entry starts
+--- - After current: entry is simply removed with no disruption
+---@param frame Frame The frame with an active queue
+---@param index number The 1-based index of the entry to remove
+function lib:RemoveQueueEntry(frame, index)
+    local queue = lib.animationQueues[frame]
+    if not queue then return end
+
+    if type(index) ~= "number"
+        or index < 1
+        or index > #queue.entries
+        or index ~= math_floor(index)
+    then
+        return
+    end
+
+    if index < queue.index then
+        -- Entry is before the current step
+        table_remove(queue.entries, index)
+        queue.index = queue.index - 1
+    elseif index == queue.index then
+        -- Entry is the currently playing step
+        table_remove(queue.entries, index)
+        -- Stop current animation without full restore
+        lib.activeAnimations[frame] = nil
+        -- Start whatever is now at queue.index (may be exhausted)
+        StartQueueEntry(self, frame)
+    else
+        -- Entry is after the current step
+        table_remove(queue.entries, index)
+    end
 end
 
 --- Returns the definition table for a registered animation.
