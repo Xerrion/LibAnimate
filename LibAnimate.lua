@@ -682,7 +682,7 @@ function lib:RegisterAnimation(name, definition)
         error("LibAnimate: Animation definition must be a table", 2)
     end
     if not definition.type then
-        error("LibAnimate: Animation definition must have a 'type' field ('entrance' or 'exit')", 2)
+        error("LibAnimate: Animation definition must have a 'type' field ('entrance', 'exit', or 'attention')", 2)
     end
     if not definition.keyframes or #definition.keyframes < 2 then
         error("LibAnimate: Animation must have at least 2 keyframes", 2)
