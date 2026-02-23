@@ -3,6 +3,26 @@
 ### 🚀 Features
 
 - Bundle LibStub directly in repo (#29)
+## [3.5.0](https://github.com/Xerrion/LibAnimate/compare/3.4.0...3.5.0) (2026-02-23)
+
+
+### Features
+
+* add dynamic queue management ([#33](https://github.com/Xerrion/LibAnimate/issues/33)) ([83177bc](https://github.com/Xerrion/LibAnimate/commit/83177bcb2b2ded395a6c78ff74cfb39b3368707e))
+
+
+### Documentation
+
+* change image source to GitHub URL ([41bfe5e](https://github.com/Xerrion/LibAnimate/commit/41bfe5e72ac49c34a5cf4fb0b419e555ad430aa5))
+* markdown formatting in README.md ([9583661](https://github.com/Xerrion/LibAnimate/commit/95836610c783093dc43a609e495d6104f567d31e))
+* **readme:** fix styling and add new resized logo ([#32](https://github.com/Xerrion/LibAnimate/issues/32)) ([f1c35c4](https://github.com/Xerrion/LibAnimate/commit/f1c35c4a2e81e44736b9fe45b1ca0b4b639c8e0f))
+* update README formatting and content ([c9c4dc1](https://github.com/Xerrion/LibAnimate/commit/c9c4dc1d2784745e73c805306bf09a832c03d150))
+
+
+### CI/CD
+
+* migrate from git-cliff to release-please ([#34](https://github.com/Xerrion/LibAnimate/issues/34)) ([8ac3b21](https://github.com/Xerrion/LibAnimate/commit/8ac3b2138296dcb44663a5e2a09f11b16bd4971c))
+
 ## [3.3.0] - 2026-02-22
 
 ### 🚀 Features
