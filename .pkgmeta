@@ -1,6 +1,9 @@
 package-as: LibAnimate
 enable-toc-creation: yes
 
+externals:
+  Libs/LibStub: https://github.com/WoWUIDev/LibStub
+
 ignore:
   - README.md
   - .github
