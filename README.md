@@ -23,7 +23,7 @@ LibAnimate is a standalone, LibStub-based animation library that provides smooth
 - **77 built-in animations** - Entrance, exit, and attention-seeker animations
 - **Extensible** - Register custom animations via `RegisterAnimation`
 - **Delay & repeat** - Start after a delay, loop animations with `repeatCount`
-- **Animation queues** - Chain animations in sequence with per-step callbacks
+- **Animation queues** - Chain animations in sequence with per-step callbacks, looping support, and dynamic queue modification (insert, remove, skip entries at runtime)
 
 ## Supported Versions
 
@@ -92,25 +92,42 @@ LibAnimate:Animate(myFrame, "heartBeat")
 
 -- Stop animation and restore frame to its base state
 LibAnimate:Stop(myFrame)
+
+-- Queue a looping animation sequence
+LibAnimate:Queue(myFrame, {
+    { name = "fadeIn", duration = 0.5 },
+    { name = "fadeOut", duration = 0.5 },
+}, { loop = true })
+
+-- Insert an extra animation into the running queue
+LibAnimate:InsertQueueEntry(myFrame, { name = "pulse" })
 ```
 
 ## API Overview
 
-| Method                         | Description                               |
-| ------------------------------ | ----------------------------------------- |
-| `Animate(frame, name, opts?)`  | Play an animation on a frame              |
-| `Stop(frame)`                  | Stop and restore to pre-animation state   |
-| `UpdateAnchor(frame, x, y)`    | Update base anchor during animation       |
-| `IsAnimating(frame)`           | Check if a frame is animating             |
-| `GetAnimationInfo(name)`       | Get an animation's definition table       |
-| `GetAnimationNames()`          | List all registered animation names       |
-| `GetEntranceAnimations()`      | List entrance animation names             |
-| `GetExitAnimations()`          | List exit animation names                 |
-| `GetAttentionAnimations()`     | List attention seeker names               |
-| `Queue(frame, entries, opts?)` | Queue a sequence of animations on a frame |
-| `ClearQueue(frame)`            | Cancel an animation queue and stop        |
-| `IsQueued(frame)`              | Check if a frame has a pending queue      |
-| `RegisterAnimation(name, def)` | Register a custom animation               |
+| Method                              | Description                                            |
+| ----------------------------------- | ------------------------------------------------------ |
+| `Animate(frame, name, opts?)`       | Play an animation on a frame                           |
+| `Stop(frame)`                       | Stop and restore to pre-animation state                |
+| `UpdateAnchor(frame, x, y)`         | Update base anchor during animation                    |
+| `SlideAnchor(frame, x, y, dur)`     | Smoothly move a frame's base position over a duration  |
+| `IsAnimating(frame)`                | Check if a frame is animating                          |
+| `Queue(frame, entries, opts?)`      | Queue a sequence of animations (supports `loop` option)|
+| `ClearQueue(frame)`                 | Cancel an animation queue and stop                     |
+| `IsQueued(frame)`                   | Check if a frame has a running queue                   |
+| `PauseQueue(frame)`                 | Pause a running animation queue                        |
+| `ResumeQueue(frame)`                | Resume a paused animation queue                        |
+| `IsPaused(frame)`                   | Check if a frame's queue is paused                     |
+| `InsertQueueEntry(frame, entry, i?)`| Insert or append an entry to a running queue           |
+| `RemoveQueueEntry(frame, index)`    | Remove an entry from the queue                         |
+| `SkipToEntry(frame, index)`         | Skip to a specific entry in the queue                  |
+| `GetQueueInfo(frame)`               | Get the current index and total entries of a queue     |
+| `GetAnimationInfo(name)`            | Get an animation's definition table                    |
+| `GetAnimationNames()`               | List all registered animation names                    |
+| `GetEntranceAnimations()`           | List entrance animation names                          |
+| `GetExitAnimations()`               | List exit animation names                              |
+| `GetAttentionAnimations()`          | List attention seeker names                             |
+| `RegisterAnimation(name, def)`      | Register a custom animation                            |
 
 For detailed parameters, return types, and examples, see the **[API Reference](https://github.com/Xerrion/LibAnimate/wiki/API-Reference)**.
 

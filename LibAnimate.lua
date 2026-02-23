@@ -57,6 +57,7 @@ if not lib then return end
 --- Options for the animation queue.
 ---@class QueueOpts
 ---@field onFinished fun(frame: Frame)? Called when the entire sequence completes
+---@field loop boolean? If true, restart from entry 1 after the last entry. onFinished is not called while looping.
 
 ---@class AnimationState
 ---@field definition AnimationDefinition
@@ -92,6 +93,7 @@ local math_min = math.min
 local math_abs = math.abs
 local math_floor = math.floor
 local table_sort = table.sort
+local table_insert = table.insert
 local table_remove = table.remove
 
 -------------------------------------------------------------------------------
@@ -722,6 +724,16 @@ local function StartQueueEntry(self, frame)
 
     local entry = queue.entries[queue.index]
     if not entry then
+        if queue.loop then
+            if #queue.entries == 0 then
+                self.animationQueues[frame] = nil
+                if queue.onFinished then queue.onFinished(frame) end
+                return
+            end
+            queue.index = 1
+            StartQueueEntry(self, frame)
+            return
+        end
         -- Queue exhausted
         local onFinished = queue.onFinished
         self.animationQueues[frame] = nil
@@ -762,10 +774,22 @@ lib._startQueueEntry = StartQueueEntry
 --- Queues a sequence of animations to play one after another on a frame.
 --- Each entry can have its own duration, distance, delay, repeatCount,
 --- and onFinished callback.
---- The sequence-level onFinished fires after the entire queue completes.
+--- The sequence-level `onFinished` fires after the entire queue completes.
+---
+--- If any animation is already running on the frame, it is stopped and the
+--- frame is restored before the queue begins.
+---
+--- All animation names are validated upfront; an error is thrown if any
+--- entry references an unregistered animation.
+---
+--- The `opts.loop` flag causes the queue to restart from entry 1 after the
+--- last entry finishes. While looping, `opts.onFinished` is NOT called.
+--- A looping queue can be stopped with `ClearQueue()` or `Stop()`.
+--- If all entries are removed from a looping queue (via `RemoveQueueEntry`),
+--- the loop ends and `onFinished` is called.
 ---@param frame Frame The frame to animate
 ---@param entries QueueEntry[] Array of animation steps
----@param opts QueueOpts? Sequence-level options
+---@param opts QueueOpts? Sequence-level options (onFinished, loop)
 function lib:Queue(frame, entries, opts)
     if not frame then
         error("LibAnimate:Queue — frame must not be nil", 2)
@@ -778,6 +802,10 @@ function lib:Queue(frame, entries, opts)
         error("LibAnimate:Queue — opts must be a table or nil", 2)
     end
     opts = opts or {}
+
+    if opts.loop ~= nil and type(opts.loop) ~= "boolean" then
+        error("LibAnimate:Queue — opts.loop must be a boolean", 2)
+    end
 
     -- Validate all animation names upfront
     for i, entry in ipairs(entries) do
@@ -801,6 +829,7 @@ function lib:Queue(frame, entries, opts)
         entries = entries,
         index = 1,
         onFinished = opts.onFinished,
+        loop = opts.loop or false,
     }
 
     StartQueueEntry(self, frame)
@@ -991,6 +1020,90 @@ function lib:RemoveQueueEntry(frame, index)
         -- Entry is after the current step
         table_remove(queue.entries, index)
     end
+end
+
+-------------------------------------------------------------------------------
+-- InsertQueueEntry
+-------------------------------------------------------------------------------
+
+--- Inserts a new entry into the current animation queue for the given frame.
+--- If `index` is omitted, the entry is appended to the end of the queue.
+--- If `index` is provided, the entry is inserted at that 1-based position,
+--- shifting subsequent entries forward.
+---
+--- Behaviour details:
+--- - The entry is validated before insertion: `entry.name` must reference
+---   a registered animation, otherwise an error is thrown
+--- - Out-of-range indices are clamped to the append position (end + 1)
+--- - When inserting before or at the currently-playing entry, `queue.index`
+---   is incremented so the currently-playing animation stays aligned
+--- - An entry inserted before the current index will NOT be played, because
+---   it has already been "passed" in the queue sequence
+--- - Works on both RUNNING and PAUSED queues
+---@param frame Frame The frame that has an active animation queue
+---@param entry QueueEntry The animation entry to insert
+---@param index number? 1-based position to insert at (clamped if out of range). Omit to append.
+function lib:InsertQueueEntry(frame, entry, index)
+    if not frame then
+        error("LibAnimate: InsertQueueEntry: frame must not be nil", 2)
+    end
+
+    local queue = lib.animationQueues[frame]
+    if not queue then
+        error("LibAnimate: InsertQueueEntry: no active queue for this frame", 2)
+    end
+
+    if type(entry) ~= "table" then
+        error("LibAnimate: InsertQueueEntry: entry must be a table", 2)
+    end
+    if type(entry.name) ~= "string" then
+        error("LibAnimate: InsertQueueEntry: entry.name must be a string", 2)
+    end
+    if not lib.animations[entry.name] then
+        error("LibAnimate: InsertQueueEntry: unknown animation '" .. tostring(entry.name) .. "'", 2)
+    end
+
+    local count = #queue.entries
+
+    if index == nil then
+        queue.entries[count + 1] = entry
+        return
+    end
+
+    if type(index) ~= "number" or index < 1 or index ~= math_floor(index) then
+        error("LibAnimate: InsertQueueEntry: index must be a positive integer", 2)
+    end
+
+    if index > count + 1 then
+        index = count + 1
+    end
+
+    table_insert(queue.entries, index, entry)
+
+    if index <= queue.index then
+        queue.index = queue.index + 1
+    end
+end
+
+-------------------------------------------------------------------------------
+-- GetQueueInfo
+-------------------------------------------------------------------------------
+
+--- Returns the current queue state for a frame: the 1-based index of the
+--- currently-playing entry and the total number of entries in the queue.
+--- Returns nil, nil if no queue is active on the frame.
+---
+--- Useful for computing insert positions and for tracking how indices shift
+--- after calls to `InsertQueueEntry` or `RemoveQueueEntry`.
+---@param frame Frame The frame to query
+---@return number|nil currentIndex 1-based index of the currently-playing entry, or nil if no queue
+---@return number|nil totalEntries Total number of entries in the queue, or nil if no queue
+function lib:GetQueueInfo(frame)
+    local queue = lib.animationQueues[frame]
+    if not queue then
+        return nil, nil
+    end
+    return queue.index, #queue.entries
 end
 
 --- Returns the definition table for a registered animation.
