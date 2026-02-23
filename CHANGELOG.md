@@ -1,8 +1,20 @@
+## [3.4.1] - 2026-02-23
+
+### 📚 Documentation
+
+- Change image source to GitHub URL
+- Update README formatting and content
+- *(readme)* Fix styling and add new resized logo (#32)
+- Markdown formatting in README.md
 ## [3.4.0] - 2026-02-22
 
 ### 🚀 Features
 
 - Bundle LibStub directly in repo (#29)
+
+### ⚙️ Miscellaneous Tasks
+
+- Release 3.4.0 (#30)
 ## [3.3.0] - 2026-02-22
 
 ### 🚀 Features
