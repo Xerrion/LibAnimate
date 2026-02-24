@@ -500,19 +500,14 @@ driverFrame:SetScript("OnUpdate", function()
 
     -- Process completions
     if toRemove then
-        -- First pass: clean up state and snap to final values
+        -- First pass: snap to final values and collect callbacks.
+        -- State is intentionally kept alive for frames that have an onFinished
+        -- callback so that Animate() -> Stop() inside the callback can restore
+        -- the frame to its base anchor before capturing the new anchor.
         local callbacks = nil
         for _, frame in ipairs(toRemove) do
             local state = lib.activeAnimations[frame]
             if state then
-                local onFinished = state.onFinished
-                if onFinished then
-                    if not callbacks then callbacks = {} end
-                    callbacks[#callbacks + 1] = {
-                        fn = onFinished, frame = frame,
-                    }
-                end
-
                 -- Snap to final state
                 local lastKf = state.keyframes[#state.keyframes]
                 local ftx = GetProperty(lastKf, "translateX")
@@ -521,14 +516,26 @@ driverFrame:SetScript("OnUpdate", function()
                 local fal = GetProperty(lastKf, "alpha")
                 ApplyToFrame(frame, state, ftx, fty, fsc, fal)
 
-                lib.activeAnimations[frame] = nil
+                if state.onFinished then
+                    if not callbacks then callbacks = {} end
+                    callbacks[#callbacks + 1] = {
+                        fn = state.onFinished, frame = frame, state = state,
+                    }
+                else
+                    lib.activeAnimations[frame] = nil
+                end
             end
         end
 
-        -- Second pass: fire callbacks (after all state is clean)
+        -- Second pass: fire callbacks.
+        -- After each callback, clear the state only if the callback did not
+        -- start a new animation (i.e. the slot still holds the completed state).
         if callbacks then
             for _, cb in ipairs(callbacks) do
                 cb.fn(cb.frame)
+                if lib.activeAnimations[cb.frame] == cb.state then
+                    lib.activeAnimations[cb.frame] = nil
+                end
             end
         end
     end
