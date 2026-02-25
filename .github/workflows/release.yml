@@ -10,6 +10,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   release:
     uses: Xerrion/wow-workflows/.github/workflows/release.yml@main
