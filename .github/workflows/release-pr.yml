@@ -4,6 +4,10 @@ on:
   push:
     branches: [master]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release-pr:
     uses: Xerrion/wow-workflows/.github/workflows/release-pr.yml@main
