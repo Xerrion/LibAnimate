@@ -2,19 +2,9 @@ name: Release PR
 
 on:
   push:
-    branches:
-      - master
-
-permissions:
-  contents: write
-  pull-requests: write
+    branches: [master]
 
 jobs:
-  release-please:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: googleapis/release-please-action@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
+  release-pr:
+    uses: Xerrion/wow-workflows/.github/workflows/release-pr.yml@main
+    secrets: inherit
