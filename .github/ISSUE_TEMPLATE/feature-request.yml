@@ -1,38 +1,35 @@
-name: "\U00002728 Feature Request"
+name: Feature Request
 description: Suggest a new feature or improvement for LibAnimate
-labels: ["enhancement"]
+title: "[Feature]: "
+labels:
+  - enhancement
+assignees: []
 body:
   - type: textarea
-    id: problem
+    id: problem-motivation
     attributes:
       label: Problem / Motivation
-      description: What problem does this solve? Why is it needed?
-      placeholder: I want to animate X but there is no way to...
+      description: What problem does this solve?
     validations:
       required: true
-
   - type: textarea
-    id: solution
+    id: proposed-solution
     attributes:
       label: Proposed Solution
-      description: Describe the feature or API you would like.
-      placeholder: |
-        A new `lib:FooBar(frame, ...)` method that...
+      description: Describe the desired feature or API
     validations:
       required: true
-
   - type: textarea
-    id: alternatives
+    id: alternatives-considered
     attributes:
       label: Alternatives Considered
-      description: Other approaches you have considered.
+      description: Other approaches you've considered
     validations:
       required: false
-
   - type: textarea
-    id: context
+    id: additional-context
     attributes:
       label: Additional Context
-      description: Examples, references, mockups, or anything else.
+      description: Examples, references, mockups
     validations:
       required: false
