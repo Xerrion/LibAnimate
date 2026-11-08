@@ -32,6 +32,7 @@ LibAnimate is a standalone, LibStub-based animation library that provides smooth
 | Retail          | 110207    |
 | TBC Anniversary | 20505     |
 | MoP Classic     | 50503     |
+| Forever (1.60.1) | 16001     |
 
 ## Installation
 

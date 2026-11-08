@@ -3,7 +3,7 @@
 -- Keyframe-driven animation library for World of Warcraft frames
 -- Inspired by animate.css (https://animate.style)
 --
--- Supported versions: Retail, TBC Anniversary, MoP Classic
+-- Supported versions: Retail, TBC Anniversary, MoP Classic, Forever (1.60.1)
 -------------------------------------------------------------------------------
 
 local MAJOR, MINOR = "LibAnimate", 1
