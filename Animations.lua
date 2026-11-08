@@ -3,7 +3,7 @@
 -- Built-in animation definitions for LibAnimate
 -- Adapted from animate.css (https://animate.style) by Daniel Eden
 --
--- Supported versions: Retail, TBC Anniversary, MoP Classic
+-- Supported versions: Retail, TBC Anniversary, MoP Classic, Forever (1.60.1)
 -------------------------------------------------------------------------------
 
 local lib = LibStub("LibAnimate")

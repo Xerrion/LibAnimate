@@ -45,6 +45,7 @@ body:
         - Retail
         - TBC Anniversary
         - MoP Classic
+        - Forever
     validations:
       required: true
   - type: input
