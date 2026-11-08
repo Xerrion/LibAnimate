@@ -3,6 +3,13 @@
 ### 🚀 Features
 
 - Bundle LibStub directly in repo (#29)
+## [3.6.0](https://github.com/Xerrion/LibAnimate/compare/3.5.9...3.6.0) (2026-11-08)
+
+
+### Features
+
+* add WoW Forever 1.60.1 support ([#69](https://github.com/Xerrion/LibAnimate/issues/69)) ([33b00c5](https://github.com/Xerrion/LibAnimate/commit/33b00c5c9aa12b96cd6e8f3fc9306f02e496a466))
+
 ## [3.5.9](https://github.com/Xerrion/LibAnimate/compare/3.5.8...3.5.9) (2026-05-12)
 
 
