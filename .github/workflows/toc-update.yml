@@ -14,4 +14,4 @@ jobs:
   toc-update:
     uses: Xerrion/wow-workflows/.github/workflows/toc-update.yml@main
     with:
-      flavors: "retail classic tbc"
+      flavors: "retail classic tbc forever"
