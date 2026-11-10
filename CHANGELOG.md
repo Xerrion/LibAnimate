@@ -3,6 +3,13 @@
 ### 🚀 Features
 
 - Bundle LibStub directly in repo (#29)
+## [3.6.1](https://github.com/Xerrion/LibAnimate/compare/3.6.0...3.6.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* include Forever in automatic TOC updates ([#71](https://github.com/Xerrion/LibAnimate/issues/71)) ([8d47897](https://github.com/Xerrion/LibAnimate/commit/8d478978b337f232da35501319c8f12034658911))
+
 ## [3.6.0](https://github.com/Xerrion/LibAnimate/compare/3.5.9...3.6.0) (2026-11-08)
 
 
