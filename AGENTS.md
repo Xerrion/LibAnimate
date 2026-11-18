@@ -53,3 +53,22 @@ The shared OnUpdate driver must never crash. Two rules:
 - The OnUpdate driver runs every frame for every active animation - keep per-tick work allocation-free; do not create tables or closures inside the interpolation path.
 - Frame recycled while an animation is active: callers must call the lib's stop API before releasing/repooling, or stale entries linger in `lib.activeAnimations`.
 - Cubic-bezier easing solves `t` numerically; supply only well-formed control points (x in [0, 1]) or the Newton-Raphson loop misbehaves.
+
+## AI Code of Conduct
+
+Applies to every AI coding agent working in this repo. Human contributors: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+- **Disclose.** State in the PR description which tool was used and how much of the change it produced.
+- **Keep a human in the loop.** A human must review, understand, and be able to explain every line submitted. Never submit unreviewed agent output.
+- **Verify.** Run `luacheck .` and test in-game before submitting (this repo has no unit tests). Never claim a check passed without running it.
+- **Do not invent WoW API behaviour.** Verify against [warcraft.wiki.gg](https://warcraft.wiki.gg) and Blizzard's FrameXML source.
+- **No spam.** No bulk or drive-by AI-generated issues or PRs. One scoped change per PR, linked to an issue.
+- **Licensing.** Contributors are responsible for licensing. Do not paste code of unknown origin.
+- **Stay in bounds.**
+  - Follow this AGENTS.md.
+  - Never push to `master`.
+  - Never merge release-please PRs (`chore(master): release X.Y.Z`); the owner merges those.
+  - Do not touch secrets or workflow permissions without explicit approval.
+- **PR titles** must be conventional commits (`feat:`, `fix(scope):`, `chore:` ...). Squash merges use the PR title as the commit message, and release-please derives versions from it.
+
+Maintainers may close undisclosed or unreviewed AI-assisted PRs without review.
