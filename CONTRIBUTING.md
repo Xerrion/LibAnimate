@@ -19,7 +19,6 @@ There is no build step and no submodule setup; Lua files load directly in the Wo
 
 AI tools are welcome, but you are responsible for what you submit.
 
-- **Disclose.** State in the PR description which tool you used and how much of the change it produced.
 - **Review everything.** You must review, understand, and be able to explain every line you submit. Do not submit unreviewed agent output.
 - **Verify.** Run `luacheck .` and test in-game before submitting. Never claim a check passed without running it.
 - **Do not invent WoW API behaviour.** Verify against [warcraft.wiki.gg](https://warcraft.wiki.gg) and Blizzard's FrameXML source.
@@ -27,4 +26,4 @@ AI tools are welcome, but you are responsible for what you submit.
 - **Licensing.** You are responsible for licensing. Do not paste code of unknown origin.
 - **Agents.** If an agent works on your behalf, it must follow [AGENTS.md](AGENTS.md): it never pushes to `master`, never merges release-please PRs (`chore(master): release X.Y.Z`; the owner merges those), and does not touch secrets or workflow permissions without explicit approval.
 
-Maintainers may close undisclosed or unreviewed AI-assisted PRs without review.
+Maintainers may close unreviewed AI-assisted PRs without review.
