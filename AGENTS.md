@@ -58,7 +58,6 @@ The shared OnUpdate driver must never crash. Two rules:
 
 Applies to every AI coding agent working in this repo. Human contributors: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-- **Disclose.** State in the PR description which tool was used and how much of the change it produced.
 - **Keep a human in the loop.** A human must review, understand, and be able to explain every line submitted. Never submit unreviewed agent output.
 - **Verify.** Run `luacheck .` and test in-game before submitting (this repo has no unit tests). Never claim a check passed without running it.
 - **Do not invent WoW API behaviour.** Verify against [warcraft.wiki.gg](https://warcraft.wiki.gg) and Blizzard's FrameXML source.
@@ -71,4 +70,4 @@ Applies to every AI coding agent working in this repo. Human contributors: see [
   - Do not touch secrets or workflow permissions without explicit approval.
 - **PR titles** must be conventional commits (`feat:`, `fix(scope):`, `chore:` ...). Squash merges use the PR title as the commit message, and release-please derives versions from it.
 
-Maintainers may close undisclosed or unreviewed AI-assisted PRs without review.
+Maintainers may close unreviewed AI-assisted PRs without review.
