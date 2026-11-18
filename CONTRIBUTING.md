@@ -4,11 +4,7 @@ Thanks for helping improve LibAnimate. This guide covers the basics; [AGENTS.md]
 
 ## Setup
 
-1. Fork and clone the repo.
-2. Install [luacheck](https://github.com/lunarmodules/luacheck).
-3. Symlink or copy the repo into your WoW `Interface/AddOns/` folder to test it in-game.
-
-There is no build step and no submodule setup; Lua files load directly in the WoW client.
+There is no build step and no submodule setup; Lua files load directly in the WoW client. Linting uses `luacheck` with the repo's `.luacheckrc`.
 
 ## Workflow
 
