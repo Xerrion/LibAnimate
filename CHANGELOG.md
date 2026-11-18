@@ -3,6 +3,23 @@
 ### 🚀 Features
 
 - Bundle LibStub directly in repo (#29)
+## 3.6.1 (2026-11-18)
+
+<!-- Release notes generated using configuration in .github/release.yml at master -->
+
+## What's Changed
+### ⚙️ Other Changes
+* fix: include Forever in automatic TOC updates by @Xerrion in https://github.com/Xerrion/LibAnimate/pull/71
+* ci: run lint on pull_request instead of pull_request_target by @Xerrion in https://github.com/Xerrion/LibAnimate/pull/73
+* docs: drop AI disclosure requirement by @Xerrion in https://github.com/Xerrion/LibAnimate/pull/74
+* chore: use GitHub-generated release notes to credit contributors by @Xerrion in https://github.com/Xerrion/LibAnimate/pull/75
+* ci: add PR labeler and unify release note categories by @Xerrion in https://github.com/Xerrion/LibAnimate/pull/76
+* ci: use pull_request triggers and update action versions by @Xerrion in https://github.com/Xerrion/LibAnimate/pull/78
+* ci: run the PR labeler on pull_request_target for fork PRs by @Xerrion in https://github.com/Xerrion/LibAnimate/pull/79
+
+
+**Full Changelog**: https://github.com/Xerrion/LibAnimate/compare/3.6.0...3.6.1
+
 ## [3.6.0](https://github.com/Xerrion/LibAnimate/compare/3.5.9...3.6.0) (2026-11-08)
 
 
